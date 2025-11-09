@@ -12,6 +12,8 @@ export default function Home() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [fileMetadata, setFileMetadata] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [loadingStage, setLoadingStage] = useState('')
+  const [progress, setProgress] = useState(0)
   const [results, setResults] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -29,6 +31,8 @@ export default function Home() {
 
     setIsLoading(true)
     setError(null)
+    setLoadingStage('Uploading file...')
+    setProgress(10)
 
     try {
       // Upload file and parameters
@@ -43,6 +47,9 @@ export default function Home() {
         method: 'POST',
         body: formData,
       })
+
+      setProgress(30)
+      setLoadingStage('File uploaded successfully')
 
       console.log('Upload response status:', uploadResponse.status)
 
@@ -63,8 +70,11 @@ export default function Home() {
       const uploadData = await uploadResponse.json()
       console.log('Upload successful:', uploadData)
 
-      // Run backtest
-      const backtestResponse = await fetch('/api/backtest', {
+      setProgress(40)
+      setLoadingStage('Starting backtest...')
+
+      // Run backtest with progress simulation
+      const backtestPromise = fetch('/api/backtest', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -75,6 +85,31 @@ export default function Home() {
           parameters,
         }),
       })
+
+      // Simulate progress updates
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev < 85) {
+            const increment = Math.random() * 3
+            return Math.min(prev + increment, 85)
+          }
+          return prev
+        })
+      }, 2000)
+
+      // Update stage messages over time
+      setTimeout(() => setLoadingStage('Loading data...'), 5000)
+      setTimeout(() => setLoadingStage('Calculating EMA indicators...'), 15000)
+      setTimeout(() => setLoadingStage('Detecting signals...'), 30000)
+      setTimeout(() => setLoadingStage('Simulating trades... (This takes time)'), 45000)
+      setTimeout(() => setLoadingStage('Analyzing performance...'), 120000)
+      setTimeout(() => setLoadingStage('Finalizing results...'), 180000)
+
+      const backtestResponse = await backtestPromise
+      clearInterval(progressInterval)
+
+      setProgress(95)
+      setLoadingStage('Processing results...')
 
       console.log('Backtest response status:', backtestResponse.status)
 
@@ -94,11 +129,18 @@ export default function Home() {
 
       const backtestData = await backtestResponse.json()
       console.log('Backtest successful:', backtestData)
-      setResults(backtestData)
+      
+      setProgress(100)
+      setLoadingStage('Complete!')
+      
+      setTimeout(() => {
+        setResults(backtestData)
+        setIsLoading(false)
+      }, 500)
+
     } catch (err: any) {
       console.error('Error in handleRunBacktest:', err)
       setError(err.message || 'An error occurred')
-    } finally {
       setIsLoading(false)
     }
   }
@@ -144,7 +186,12 @@ export default function Home() {
         <ResultsDisplay results={results} onReset={() => setResults(null)} />
       )}
 
-      {isLoading && <LoadingIndicator />}
+      {isLoading && (
+        <LoadingIndicator 
+          stage={loadingStage} 
+          progress={progress} 
+        />
+      )}
     </div>
   )
 }
