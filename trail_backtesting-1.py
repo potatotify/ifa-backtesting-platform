@@ -384,8 +384,8 @@ if __name__ == "__main__":
         # Default for running script directly
         input_data = "nq_ohlcv_minute_combined_2020_2025.csv"
     
-    # Run backtest without plots for web app (faster)
+    # Run backtest WITH PLOTS for web app
     print("Starting backtest...")
-    trades, stats = run_backtest(input_data, generate_plots=False)  # <-- Added parameter
+    trades, stats = run_backtest(input_data, generate_plots=True)
     print(json.dumps(stats, default=str))
     print("Backtest completed!")

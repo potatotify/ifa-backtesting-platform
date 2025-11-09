@@ -1,118 +1,118 @@
 // Component: File upload with CSV validation and preview
 
-'use client'
+"use client";
 
-import { useState, useRef } from 'react'
+import {useState, useRef} from "react";
 
 interface FileUploadProps {
-  onFileUpload: (file: File, metadata: any) => void
+  onFileUpload: (file: File, metadata: any) => void;
 }
 
-export default function FileUpload({ onFileUpload }: FileUploadProps) {
-  const [file, setFile] = useState<File | null>(null)
-  const [preview, setPreview] = useState<string[][]>([])
-  const [error, setError] = useState<string | null>(null)
-  const [isValidating, setIsValidating] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+export default function FileUpload({onFileUpload}: FileUploadProps) {
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string[][]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const requiredColumns = ['date_time', 'open', 'high', 'low', 'close']
+  const requiredColumns = ["date_time", "open", "high", "low", "close"];
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
-    if (!selectedFile) return
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
 
     // Reset states
-    setError(null)
-    setPreview([])
-    setFile(null)
+    setError(null);
+    setPreview([]);
+    setFile(null);
 
     // Validate file type
-    if (!selectedFile.name.endsWith('.csv')) {
-      setError('Please upload a CSV file')
-      return
+    if (!selectedFile.name.endsWith(".csv")) {
+      setError("Please upload a CSV file");
+      return;
     }
 
     // Validate file size (100MB limit)
-    const maxSize = 150 * 1024 * 1024
+    const maxSize = 150 * 1024 * 1024;
     if (selectedFile.size > maxSize) {
-      setError('File size exceeds 100MB limit')
-      return
+      setError("File size exceeds 100MB limit");
+      return;
     }
 
-    setIsValidating(true)
+    setIsValidating(true);
 
     try {
       // Read first few lines for preview and validation
-      const text = await readFilePreview(selectedFile)
-      const lines = text.split('\n').filter(line => line.trim())
-      
+      const text = await readFilePreview(selectedFile);
+      const lines = text.split("\n").filter((line) => line.trim());
+
       if (lines.length < 2) {
-        throw new Error('File appears to be empty')
+        throw new Error("File appears to be empty");
       }
 
-      const headers = lines[0].split(',').map(h => h.trim().toLowerCase())
-      
+      const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+
       // Validate required columns
       const missingColumns = requiredColumns.filter(
-        col => !headers.includes(col)
-      )
+        (col) => !headers.includes(col)
+      );
 
       if (missingColumns.length > 0) {
         throw new Error(
-          `Missing required columns: ${missingColumns.join(', ')}`
-        )
+          `Missing required columns: ${missingColumns.join(", ")}`
+        );
       }
 
       // Create preview (first 5 rows)
-      const previewData = lines.slice(0, 6).map(line => 
-        line.split(',').map(cell => cell.trim())
-      )
+      const previewData = lines
+        .slice(0, 6)
+        .map((line) => line.split(",").map((cell) => cell.trim()));
 
-      setPreview(previewData)
-      setFile(selectedFile)
+      setPreview(previewData);
+      setFile(selectedFile);
 
       // Calculate metadata
       const metadata = {
         name: selectedFile.name,
         size: formatFileSize(selectedFile.size),
         rows: lines.length - 1, // Exclude header
-        columns: headers,
-      }
+        columns: headers
+      };
 
-      onFileUpload(selectedFile, metadata)
+      onFileUpload(selectedFile, metadata);
     } catch (err: any) {
-      setError(err.message || 'Failed to validate file')
+      setError(err.message || "Failed to validate file");
     } finally {
-      setIsValidating(false)
+      setIsValidating(false);
     }
-  }
+  };
 
   const readFilePreview = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      const blob = file.slice(0, 50000) // Read first 50KB for preview
-      
-      reader.onload = (e) => resolve(e.target?.result as string)
-      reader.onerror = () => reject(new Error('Failed to read file'))
-      
-      reader.readAsText(blob)
-    })
-  }
+      const reader = new FileReader();
+      const blob = file.slice(0, 50000); // Read first 50KB for preview
+
+      reader.onload = (e) => resolve(e.target?.result as string);
+      reader.onerror = () => reject(new Error("Failed to read file"));
+
+      reader.readAsText(blob);
+    });
+  };
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return bytes + ' B'
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB'
-    return (bytes / (1024 * 1024)).toFixed(2) + ' MB'
-  }
+    if (bytes < 1024) return bytes + " B";
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
+    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+  };
 
   const handleClear = () => {
-    setFile(null)
-    setPreview([])
-    setError(null)
+    setFile(null);
+    setPreview([]);
+    setError(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = ''
+      fileInputRef.current.value = "";
     }
-  }
+  };
 
   return (
     <div className="space-y-4">
@@ -133,7 +133,8 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
               />
             </svg>
             <p className="mb-2 text-sm text-gray-400">
-              <span className="font-semibold">Click to upload</span> or drag and drop
+              <span className="font-semibold">Click to upload</span> or drag and
+              drop
             </p>
             <p className="text-xs text-gray-500">CSV files only (MAX. 100MB)</p>
           </div>
@@ -165,7 +166,8 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
             <div>
               <p className="font-semibold">{file.name}</p>
               <p className="text-sm">
-                {formatFileSize(file.size)} • {preview.length - 1} rows (preview)
+                {formatFileSize(file.size)} • {preview.length - 1} rows
+                (preview)
               </p>
             </div>
             <button
@@ -178,7 +180,9 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
 
           {preview.length > 0 && (
             <div className="overflow-x-auto">
-              <p className="text-sm text-gray-400 mb-2">Preview (first 5 rows):</p>
+              <p className="text-sm text-gray-400 mb-2">
+                Preview (first 5 rows):
+              </p>
               <table className="min-w-full text-sm text-gray-300">
                 <thead className="bg-gray-700">
                   <tr>
@@ -196,7 +200,10 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
                   {preview.slice(1, 6).map((row, idx) => (
                     <tr key={idx}>
                       {row.map((cell, cellIdx) => (
-                        <td key={cellIdx} className="px-3 py-2 whitespace-nowrap">
+                        <td
+                          key={cellIdx}
+                          className="px-3 py-2 whitespace-nowrap"
+                        >
                           {cell}
                         </td>
                       ))}
@@ -209,5 +216,5 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
         </div>
       )}
     </div>
-  )
+  );
 }

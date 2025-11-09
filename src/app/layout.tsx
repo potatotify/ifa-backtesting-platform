@@ -1,21 +1,17 @@
-// Route: Root layout for all pages
+import type {Metadata} from "next";
+import {Inter} from "next/font/google";
+import Link from "next/link";
+import "./globals.css";
 
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import './globals.css'
-
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({subsets: ["latin"]});
 
 export const metadata: Metadata = {
-  title: 'Trading Strategy Backtesting Platform',
-  description: 'Upload OHLC data, configure strategy parameters, and run backtests',
-}
+  title: "Trading Strategy Backtesting Platform",
+  description:
+    "Upload OHLC data, configure strategy parameters, and run backtests"
+};
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en">
       <body className={inter.className}>
@@ -24,9 +20,17 @@ export default function RootLayout({
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-between h-16">
                 <div className="flex items-center">
-                  <h1 className="text-xl font-bold text-white">
+                  <Link href="/" className="text-xl font-bold text-white">
                     Trading Backtest Platform
-                  </h1>
+                  </Link>
+                </div>
+                <div>
+                  <Link
+                    href="/history"
+                    className="text-gray-300 hover:text-white transition-colors"
+                  >
+                    View History
+                  </Link>
                 </div>
               </div>
             </div>
@@ -35,5 +39,5 @@ export default function RootLayout({
         </div>
       </body>
     </html>
-  )
+  );
 }

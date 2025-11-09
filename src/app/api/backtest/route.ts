@@ -43,3 +43,37 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
+
+// Generate chart data as backup/for Recharts
+function generateChartData(trades: any[], startingBalance: number) {
+  const equityCurve = [];
+  const monthlyReturns: {[key: string]: number} = {};
+
+  let currentBalance = startingBalance;
+
+  trades.forEach((trade, index) => {
+    currentBalance += trade.pnl;
+
+    equityCurve.push({
+      trade_number: index + 1,
+      date: trade.exit_time,
+      balance: parseFloat(currentBalance.toFixed(2))
+    });
+
+    // Extract month from date (assumes format like "2020-01-15 09:30:00")
+    const month = trade.exit_time.substring(0, 7); // "2020-01"
+    monthlyReturns[month] = (monthlyReturns[month] || 0) + trade.pnl;
+  });
+
+  const monthlyReturnsArray = Object.entries(monthlyReturns).map(
+    ([month, pnl]) => ({
+      month,
+      pnl: parseFloat((pnl as number).toFixed(2))
+    })
+  );
+
+  return {
+    equity_curve: equityCurve,
+    monthly_returns: monthlyReturnsArray
+  };
+}
