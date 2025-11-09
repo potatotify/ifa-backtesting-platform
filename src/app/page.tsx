@@ -80,10 +80,11 @@ export default function Home() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          fileId: uploadData.fileId,
-          filePath: uploadData.filepath,
-          parameters,
+        fileId: uploadData.fileId,
+        fileUrl: uploadData.fileUrl,  // NEW - Cloudinary URL
+        parameters,
         }),
+
       })
 
       // Simulate progress updates
