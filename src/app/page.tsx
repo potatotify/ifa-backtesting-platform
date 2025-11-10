@@ -1,5 +1,3 @@
-// Route: / (Home page with file upload and parameter form)
-
 'use client'
 
 import { useState } from 'react'
@@ -8,139 +6,92 @@ import ParameterForm from '@/components/ParameterForm'
 import LoadingIndicator from '@/components/LoadingIndicator'
 import ResultsDisplay from '@/components/ResultsDisplay'
 
+interface FileMetadata {
+  fileUrl: string
+  publicId: string
+  filename: string
+  size: number
+}
+
 export default function Home() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
-  const [fileMetadata, setFileMetadata] = useState<any>(null)
+  const [fileMetadata, setFileMetadata] = useState<FileMetadata | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [loadingStage, setLoadingStage] = useState('')
   const [progress, setProgress] = useState(0)
   const [results, setResults] = useState<any>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const handleFileUpload = (file: File, metadata: any) => {
+  const handleFileUpload = (file: File, metadata: FileMetadata) => {
     setUploadedFile(file)
     setFileMetadata(metadata)
     setError(null)
+    console.log('File uploaded to Cloudinary:', metadata)
   }
 
   const handleRunBacktest = async (parameters: any) => {
-    if (!uploadedFile) {
+    if (!fileMetadata) {
       setError('Please upload a CSV file first')
       return
     }
 
     setIsLoading(true)
     setError(null)
-    setLoadingStage('Uploading file...')
     setProgress(10)
+    setLoadingStage('Downloading CSV from Cloudinary...')
 
     try {
-      // Upload file and parameters
-      const formData = new FormData()
-      formData.append('file', uploadedFile)
-      formData.append('parameters', JSON.stringify(parameters))
+      // Simulate download progress (10% -> 50%)
+      const downloadInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev < 50) return prev + 5
+          return prev
+        })
+      }, 300)
 
-      console.log('Uploading file:', uploadedFile.name)
-      console.log('Parameters:', parameters)
-
-      const uploadResponse = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      })
-
-      setProgress(30)
-      setLoadingStage('File uploaded successfully')
-
-      console.log('Upload response status:', uploadResponse.status)
-
-      if (!uploadResponse.ok) {
-        const errorText = await uploadResponse.text()
-        console.error('Upload error response:', errorText)
-        
-        let errorData
-        try {
-          errorData = JSON.parse(errorText)
-        } catch {
-          throw new Error(`Server error: ${uploadResponse.status} - ${errorText}`)
-        }
-        
-        throw new Error(errorData.error || 'File upload failed')
-      }
-
-      const uploadData = await uploadResponse.json()
-      console.log('Upload successful:', uploadData)
-
-      setProgress(40)
-      setLoadingStage('Starting backtest...')
-
-      // Run backtest with progress simulation
-      const backtestPromise = fetch('/api/backtest', {
+      // Start backtest
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/run-backtest`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-        fileId: uploadData.fileId,
-        fileUrl: uploadData.fileUrl,  // NEW - Cloudinary URL
-        parameters,
+          fileUrl: fileMetadata.fileUrl,
+          parameters: parameters,
         }),
-
       })
 
-      // Simulate progress updates
-      const progressInterval = setInterval(() => {
+      clearInterval(downloadInterval)
+      setProgress(50)
+      setLoadingStage('Running simulation...')
+
+      // Simulate backtest progress (50% -> 90%)
+      const backtestInterval = setInterval(() => {
         setProgress(prev => {
-          if (prev < 85) {
-            const increment = Math.random() * 3
-            return Math.min(prev + increment, 85)
-          }
+          if (prev < 90) return prev + 3
           return prev
         })
-      }, 2000)
+      }, 500)
 
-      // Update stage messages over time
-      setTimeout(() => setLoadingStage('Loading data...'), 5000)
-      setTimeout(() => setLoadingStage('Calculating EMA indicators...'), 15000)
-      setTimeout(() => setLoadingStage('Detecting signals...'), 30000)
-      setTimeout(() => setLoadingStage('Simulating trades... (This takes time)'), 45000)
-      setTimeout(() => setLoadingStage('Analyzing performance...'), 120000)
-      setTimeout(() => setLoadingStage('Finalizing results...'), 180000)
-
-      const backtestResponse = await backtestPromise
-      clearInterval(progressInterval)
-
-      setProgress(95)
-      setLoadingStage('Processing results...')
-
-      console.log('Backtest response status:', backtestResponse.status)
-
-      if (!backtestResponse.ok) {
-        const errorText = await backtestResponse.text()
-        console.error('Backtest error response:', errorText)
-        
-        let errorData
-        try {
-          errorData = JSON.parse(errorText)
-        } catch {
-          throw new Error(`Server error: ${backtestResponse.status} - ${errorText}`)
-        }
-        
-        throw new Error(errorData.error || 'Backtest execution failed')
+      if (!response.ok) {
+        clearInterval(backtestInterval)
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Backtest failed')
       }
 
-      const backtestData = await backtestResponse.json()
-      console.log('Backtest successful:', backtestData)
+      const data = await response.json()
+      clearInterval(backtestInterval)
       
       setProgress(100)
       setLoadingStage('Complete!')
-      
+
       setTimeout(() => {
-        setResults(backtestData)
+        setResults(data)
         setIsLoading(false)
       }, 500)
 
     } catch (err: any) {
-      console.error('Error in handleRunBacktest:', err)
+      console.error('Error:', err)
       setError(err.message || 'An error occurred')
       setIsLoading(false)
     }
@@ -179,7 +130,7 @@ export default function Home() {
             </h3>
             <ParameterForm
               onSubmit={handleRunBacktest}
-              disabled={!uploadedFile || isLoading}
+              disabled={!fileMetadata || isLoading}
             />
           </div>
         </div>

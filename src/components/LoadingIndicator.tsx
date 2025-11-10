@@ -1,39 +1,48 @@
-// Component: Loading indicator with real progress
+'use client'
 
 interface LoadingIndicatorProps {
-  stage?: string
-  progress?: number
+  stage: string
+  progress: number
 }
 
-export default function LoadingIndicator({ 
-  stage = 'Processing...', 
-  progress = 0 
-}: LoadingIndicatorProps) {
+export default function LoadingIndicator({ stage, progress }: LoadingIndicatorProps) {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg p-8 max-w-md w-full mx-4 border border-gray-700">
-        <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mb-4"></div>
-          <h3 className="text-xl font-semibold text-white mb-2">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-gray-800 rounded-lg p-8 max-w-md w-full mx-4 border border-gray-700 shadow-2xl">
+        {/* Header */}
+        <div className="text-center mb-6">
+          <div className="w-16 h-16 mx-auto mb-4">
+            <div className="w-full h-full border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <h3 className="text-xl font-bold text-white mb-2">
             Running Backtest
           </h3>
-          <p className="text-gray-300 text-center mb-4 font-medium">
+          <p className="text-gray-400 text-sm">
             {stage}
           </p>
-          <div className="w-full bg-gray-700 rounded-full h-3 mb-2">
-            <div 
-              className="bg-blue-500 h-3 rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${progress}%` }}
-            ></div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mb-4">
+          <div className="flex justify-between text-sm text-gray-400 mb-2">
+            <span>Progress</span>
+            <span>{Math.round(progress)}%</span>
           </div>
-          <p className="text-sm text-gray-400">
-            {progress.toFixed(0)}% Complete
-          </p>
-          <p className="text-xs text-gray-500 mt-4 text-center">
-            Processing large dataset. This may take 3-5 minutes.
-            <br />
-            Please keep this tab open.
-          </p>
+          <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+            <div
+              className="h-full bg-linear-to-r from-blue-500 to-purple-500 transition-all duration-500 ease-out rounded-full"
+              style={{ width: `${progress}%` }}
+            >
+              <div className="w-full h-full animate-pulse opacity-50 bg-white"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center text-sm text-gray-400">
+          {progress < 50 && " Uploading your data..."}
+          {progress >= 50 && progress < 90 && " Running simulation... This may take a few minutes"}
+          {progress >= 90 && "✨ Almost done!"}
         </div>
       </div>
     </div>

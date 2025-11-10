@@ -1,1 +1,0 @@
-{"filepath":"C:\\Career\\Projects\\backtest\\ifa-backtesting-platform\\uploads\\1762706457265_test_data_fast.csv","starting_balance":100000,"tp_ticks":20,"sl_ticks":20,"risk_percentage":1,"trailing_stop":false,"trailing_stop_ticks":5,"tick_size":0.25,"tick_value":5,"commission_per_trade":5,"slippage_ticks":1,"contract_margin":13000}
