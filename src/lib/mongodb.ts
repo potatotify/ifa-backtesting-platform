@@ -31,7 +31,7 @@ if (process.env.NODE_ENV === 'development') {
 export async function connectToDatabase(): Promise<{ client: MongoClient; db: Db }> {
   try {
     const client = await clientPromise
-    const db = client.db('trading_backtest')
+    const db = client.db('backtest')
     return { client, db }
   } catch (error) {
     console.error('MongoDB connection error:', error)

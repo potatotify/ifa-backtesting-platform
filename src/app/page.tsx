@@ -81,6 +81,37 @@ export default function Home() {
 
       const data = await response.json()
       clearInterval(backtestInterval)
+
+      // ✅ SAVE BACKTEST TO MONGODB (with all data including charts)
+      try {
+        console.log('Saving backtest to MongoDB...')
+        const saveResponse = await fetch('/api/backtest/save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            parameters: parameters,
+            results: {
+              metrics: data.metrics,
+              trades: data.trades,
+              chart_data: data.chart_data,
+              chart_files: data.chart_files,
+              downloadLinks: data.downloadLinks
+            },
+            fileUrl: fileMetadata.fileUrl,
+          }),
+        })
+
+        if (saveResponse.ok) {
+          console.log('✅ Backtest saved to history')
+        } else {
+          console.error('❌ Failed to save backtest')
+        }
+      } catch (saveError) {
+        console.error('❌ MongoDB save error:', saveError)
+        // Don't block results if save fails
+      }
       
       setProgress(100)
       setLoadingStage('Complete!')
@@ -100,16 +131,16 @@ export default function Home() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-white mb-2">
+        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
           3-Candle EMA9 Reversal Strategy
         </h2>
-        <p className="text-gray-400">
+        <p className="text-gray-600 dark:text-gray-400">
           Upload your OHLC data and configure strategy parameters to run a backtest
         </p>
       </div>
 
       {error && (
-        <div className="mb-6 bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg">
+        <div className="mb-6 bg-red-100 dark:bg-red-900/50 border border-red-400 dark:border-red-700 text-red-800 dark:text-red-200 px-4 py-3 rounded-lg">
           <p className="font-semibold">Error:</p>
           <p className="whitespace-pre-wrap">{error}</p>
         </div>
@@ -117,15 +148,15 @@ export default function Home() {
 
       {!results ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-            <h3 className="text-xl font-semibold text-white mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               Upload OHLC Data
             </h3>
             <FileUpload onFileUpload={handleFileUpload} />
           </div>
 
-          <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-            <h3 className="text-xl font-semibold text-white mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               Configure Parameters
             </h3>
             <ParameterForm

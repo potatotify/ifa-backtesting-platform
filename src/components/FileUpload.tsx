@@ -102,7 +102,7 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
         }
       })
 
-      xhr.addEventListener('load', () => {
+      xhr.addEventListener('load', async () => {
         if (xhr.status === 200) {
           const response = JSON.parse(xhr.responseText)
           
@@ -111,6 +111,24 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
             publicId: response.public_id,
             filename: file.name,
             size: file.size,
+          }
+          
+          try {
+            const dbResponse = await fetch('/api/uploads', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(metadata),
+            })
+            
+            if (dbResponse.ok) {
+              console.log('✅ Upload saved to MongoDB')
+            } else {
+              console.error('❌ Failed to save to MongoDB')
+            }
+          } catch (dbError) {
+            console.error('❌ MongoDB save error:', dbError)
           }
           
           setUploaded(true)
@@ -186,7 +204,7 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
   return (
     <div className="space-y-4">
       {!file ? (
-        <div className="border-2 border-dashed border-gray-600 rounded-lg p-8 hover:border-gray-500 transition-colors">
+        <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 hover:border-gray-400 dark:hover:border-gray-500 transition-colors bg-gray-50 dark:bg-transparent">
           <input
             type="file"
             accept=".csv"
@@ -197,40 +215,40 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
           />
           <label htmlFor="file-upload" className="cursor-pointer block">
             <div className="text-center space-y-3">
-              <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+              <svg className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                 <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <div>
-                <p className="text-white font-medium">Upload CSV File</p>
-                <p className="text-sm text-gray-400 mt-1">
+                <p className="text-gray-900 dark:text-white font-medium">Upload CSV File</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                   Required: date_time, open, high, low, close
                 </p>
               </div>
-              <p className="text-xs text-gray-500">Max 100MB</p>
+              <p className="text-xs text-gray-500 dark:text-gray-500">Max 100MB</p>
             </div>
           </label>
         </div>
       ) : (
-        <div className="bg-gray-800 border border-gray-700 rounded-lg p-4">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 flex-1">
               <div className={`h-10 w-10 rounded flex items-center justify-center ${
-                uploaded ? 'bg-green-900/50' : 'bg-blue-900/50'
+                uploaded ? 'bg-green-100 dark:bg-green-900/50' : 'bg-blue-100 dark:bg-blue-900/50'
               }`}>
                 {uploaded ? (
-                  <svg className="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 ) : (
-                  <svg className="h-5 w-5 text-blue-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5 text-blue-600 dark:text-blue-400 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                 )}
               </div>
               <div className="flex-1">
-                <p className="text-white font-medium">{file.name}</p>
-                <p className="text-sm text-gray-400">
+                <p className="text-gray-900 dark:text-white font-medium">{file.name}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   {uploaded ? 'Uploaded ✓' : `Uploading... ${Math.round(uploadProgress)}%`}
                 </p>
               </div>
@@ -238,7 +256,7 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
             {uploaded && (
               <button
                 onClick={handleClearFile}
-                className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm transition-colors"
+                className="px-3 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded text-sm transition-colors"
               >
                 Clear
               </button>
@@ -247,7 +265,7 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
           
           {uploading && (
             <div className="mt-3">
-              <div className="w-full bg-gray-700 rounded-full h-2">
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                 <div 
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
@@ -259,23 +277,23 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
       )}
 
       {(validationError || error) && (
-        <div className="bg-red-900/20 border border-red-800 text-red-300 px-4 py-3 rounded-lg">
+        <div className="bg-red-100 dark:bg-red-900/20 border border-red-400 dark:border-red-800 text-red-800 dark:text-red-300 px-4 py-3 rounded-lg">
           <p className="font-medium mb-1">Error</p>
           <p className="text-sm">{validationError || error}</p>
         </div>
       )}
 
       {csvPreview && uploaded && (
-        <div className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-700">
-            <p className="text-white text-sm font-medium">Data Preview</p>
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm">
+          <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+            <p className="text-gray-900 dark:text-white text-sm font-medium">Data Preview</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-700/50">
+              <thead className="bg-gray-100 dark:bg-gray-700/50">
                 <tr>
                   {csvPreview.headers.map((header, idx) => (
-                    <th key={idx} className="px-4 py-2 text-left text-gray-300 font-medium">
+                    <th key={idx} className="px-4 py-2 text-left text-gray-700 dark:text-gray-300 font-medium">
                       {header}
                     </th>
                   ))}
@@ -283,9 +301,9 @@ export default function FileUpload({ onFileUpload }: FileUploadProps) {
               </thead>
               <tbody>
                 {csvPreview.rows.map((row, rowIdx) => (
-                  <tr key={rowIdx} className="border-t border-gray-700">
+                  <tr key={rowIdx} className="border-t border-gray-200 dark:border-gray-700">
                     {row.map((cell, cellIdx) => (
-                      <td key={cellIdx} className="px-4 py-2 text-gray-400">
+                      <td key={cellIdx} className="px-4 py-2 text-gray-700 dark:text-gray-400">
                         {cell}
                       </td>
                     ))}

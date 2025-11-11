@@ -10,7 +10,11 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  Area,
+  AreaChart,
+  ReferenceLine,
+  Cell
 } from "recharts";
 
 interface ChartsProps {
@@ -19,7 +23,6 @@ interface ChartsProps {
 }
 
 export default function Charts({equityCurve, monthlyReturns}: ChartsProps) {
-  // Format currency for tooltips
   const formatCurrency = (value: number) => {
     return `$${value.toLocaleString(undefined, {
       minimumFractionDigits: 2,
@@ -27,38 +30,54 @@ export default function Charts({equityCurve, monthlyReturns}: ChartsProps) {
     })}`;
   };
 
-  // Custom tooltip for equity curve
   const EquityTooltip = ({active, payload}: any) => {
     if (active && payload && payload.length) {
+      const data = payload[0].payload;
       return (
-        <div className="bg-gray-900 border border-gray-700 rounded p-3 shadow-lg">
-          <p className="text-gray-300 text-sm mb-1">
-            Trade #{payload[0].payload.trade_number}
+        <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border border-blue-500/30 rounded-lg p-4 shadow-2xl">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+            <p className="text-gray-900 dark:text-white font-semibold text-sm">Trade #{data.trade_number}</p>
+          </div>
+          <p className="text-gray-600 dark:text-gray-400 text-xs mb-2 font-mono">
+            {new Date(data.date).toLocaleDateString('en-US', { 
+              month: 'short', 
+              day: 'numeric', 
+              year: 'numeric' 
+            })}
           </p>
-          <p className="text-gray-400 text-xs mb-2">
-            {payload[0].payload.date}
-          </p>
-          <p className="text-blue-400 font-semibold">
-            {formatCurrency(payload[0].value)}
-          </p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-gray-500 dark:text-gray-500 text-xs">Balance:</span>
+            <p className="text-blue-600 dark:text-blue-400 font-bold text-lg">
+              {formatCurrency(payload[0].value)}
+            </p>
+          </div>
         </div>
       );
     }
     return null;
   };
 
-  // Custom tooltip for monthly returns with color based on profit/loss
   const MonthlyTooltip = ({active, payload}: any) => {
     if (active && payload && payload.length) {
       const pnl = payload[0].value;
       const isProfit = pnl >= 0;
       return (
-        <div className="bg-gray-900 border border-gray-700 rounded p-3 shadow-lg">
-          <p className="text-gray-300 text-sm mb-1">
-            {payload[0].payload.month}
-          </p>
-          <p className={`font-semibold ${isProfit ? 'text-green-400' : 'text-red-400'}`}>
-            {isProfit ? '+' : ''}{formatCurrency(pnl)}
+        <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border border-gray-300 dark:border-gray-700 rounded-lg p-4 shadow-2xl">
+          <div className="flex items-center gap-2 mb-2">
+            <div className={`w-3 h-3 rounded-full ${isProfit ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <p className="text-gray-900 dark:text-white font-semibold text-sm">
+              {payload[0].payload.month}
+            </p>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-gray-500 text-xs">P&L:</span>
+            <p className={`font-bold text-lg ${isProfit ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+              {isProfit ? '+' : ''}{formatCurrency(pnl)}
+            </p>
+          </div>
+          <p className="text-gray-500 dark:text-gray-500 text-xs mt-1">
+            {isProfit ? '📈 Profitable Month' : '📉 Loss Month'}
           </p>
         </div>
       );
@@ -66,52 +85,89 @@ export default function Charts({equityCurve, monthlyReturns}: ChartsProps) {
     return null;
   };
 
-  // Custom bar color function - green for positive, red for negative
-  const getBarColor = (entry: any) => {
-    return entry.pnl >= 0 ? '#10B981' : '#EF4444';
+  const renderCustomLabel = (props: any) => {
+    const { x, y, width, height, value, index } = props;
+    const month = monthlyReturns[index]?.month || '';
+    const isPositive = value >= 0;
+    
+    const labelY = isPositive ? y + height + 15 : y - 10;
+    
+    return (
+      <text
+        x={x + width / 2}
+        y={labelY}
+        fill="#9CA3AF"
+        textAnchor="middle"
+        fontSize="11"
+        fontWeight="500"
+      >
+        {month}
+      </text>
+    );
   };
 
   return (
     <div className="space-y-6">
-      {/* Equity Curve - REQUIRED */}
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-white mb-4">
-          📈 Equity Curve
-        </h3>
-        <ResponsiveContainer width="100%" height={400}>
-          <LineChart 
+      {/* Equity Curve */}
+      <div className="bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-xl">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <span className="text-2xl">📈</span>
+              Equity Curve
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Account balance progression over time</p>
+          </div>
+        </div>
+        
+        <ResponsiveContainer width="100%" height={450}>
+          <AreaChart 
             data={equityCurve}
-            margin={{ top: 5, right: 30, left: 20, bottom: 20 }}
+            margin={{ top: 10, right: 30, left: 20, bottom: 30 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+            <defs>
+              <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#D1D5DB" className="dark:stroke-gray-700" opacity={0.5} />
             <XAxis
               dataKey="trade_number"
-              stroke="#9CA3AF"
-              tick={{ fill: '#9CA3AF', fontSize: 12 }}
+              stroke="#6B7280"
+              tick={{ fill: '#6B7280', fontSize: 12 }}
+              axisLine={{ stroke: '#9CA3AF' }}
               label={{
                 value: "Trade Number",
                 position: "insideBottom",
-                offset: -10,
-                fill: "#9CA3AF",
-                fontSize: 14
+                offset: -15,
+                fill: "#6B7280",
+                fontSize: 13,
+                fontWeight: 600
               }}
             />
             <YAxis
-              stroke="#9CA3AF"
-              tick={{ fill: '#9CA3AF', fontSize: 12 }}
+              stroke="#6B7280"
+              tick={{ fill: '#6B7280', fontSize: 12 }}
+              axisLine={{ stroke: '#9CA3AF' }}
               tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
               label={{
                 value: "Account Balance",
                 angle: -90,
                 position: "insideLeft",
-                fill: "#9CA3AF",
-                fontSize: 14
+                fill: "#6B7280",
+                fontSize: 13,
+                fontWeight: 600
               }}
             />
-            <Tooltip content={<EquityTooltip />} />
-            <Legend 
-              wrapperStyle={{ paddingTop: '10px' }}
-              iconType="line"
+            <Tooltip content={<EquityTooltip />} cursor={{ stroke: '#3B82F6', strokeWidth: 2, strokeDasharray: '5 5' }} />
+            <Area
+              type="monotone"
+              dataKey="balance"
+              stroke="#3B82F6"
+              strokeWidth={3}
+              fill="url(#colorBalance)"
+              name="Account Balance"
             />
             <Line
               type="monotone"
@@ -119,58 +175,101 @@ export default function Charts({equityCurve, monthlyReturns}: ChartsProps) {
               stroke="#3B82F6"
               strokeWidth={3}
               dot={false}
-              name="Account Balance"
-              activeDot={{ r: 6, fill: '#3B82F6' }}
+              activeDot={{ r: 8, fill: '#3B82F6', stroke: '#1E40AF', strokeWidth: 3 }}
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Monthly Returns - Additional Chart */}
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h3 className="text-lg font-semibold text-white mb-4">
-          📊 Monthly Returns
-        </h3>
-        <ResponsiveContainer width="100%" height={400}>
+      {/* Monthly Returns */}
+      <div className="bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-xl">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <span className="text-2xl">📊</span>
+              Monthly Returns
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Profit & loss breakdown by month</p>
+          </div>
+          <div className="flex gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-sm bg-green-500"></div>
+              <span className="text-gray-600 dark:text-gray-400 text-xs">Profit</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-sm bg-red-500"></div>
+              <span className="text-gray-600 dark:text-gray-400 text-xs">Loss</span>
+            </div>
+          </div>
+        </div>
+        
+        <ResponsiveContainer width="100%" height={500}>
           <BarChart 
             data={monthlyReturns}
-            margin={{ top: 5, right: 30, left: 20, bottom: 60 }}
+            margin={{ top: 20, right: 30, left: 50, bottom: 40 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-            <XAxis
-              dataKey="month"
-              stroke="#9CA3AF"
-              angle={-45}
-              textAnchor="end"
-              height={80}
-              tick={{ fill: '#9CA3AF', fontSize: 11 }}
+            <defs>
+              <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#10B981" stopOpacity={0.9}/>
+                <stop offset="95%" stopColor="#10B981" stopOpacity={0.7}/>
+              </linearGradient>
+              <linearGradient id="colorLoss" x1="0" y1="1" x2="0" y2="0">
+                <stop offset="5%" stopColor="#EF4444" stopOpacity={0.9}/>
+                <stop offset="95%" stopColor="#EF4444" stopOpacity={0.7}/>
+              </linearGradient>
+            </defs>
+            
+            <CartesianGrid 
+              strokeDasharray="3 3" 
+              stroke="#D1D5DB"
+              className="dark:stroke-gray-700"
+              opacity={0.4}
+              verticalFill={['rgba(209, 213, 219, 0.05)', 'transparent']}
             />
+            
+            <XAxis 
+              dataKey="month" 
+              hide={true}
+            />
+            
             <YAxis
-              stroke="#9CA3AF"
-              tick={{ fill: '#9CA3AF', fontSize: 12 }}
-              tickFormatter={(value) => `$${(value / 1000).toFixed(1)}k`}
+              stroke="#6B7280"
+              tick={{ fill: '#6B7280', fontSize: 12 }}
+              axisLine={{ stroke: '#9CA3AF', strokeWidth: 2 }}
+              tickFormatter={(value) => {
+                const absValue = Math.abs(value);
+                return `$${(absValue / 1000).toFixed(1)}k`;
+              }}
               label={{
                 value: "Profit & Loss",
                 angle: -90,
                 position: "insideLeft",
-                fill: "#9CA3AF",
-                fontSize: 14
+                fill: "#6B7280",
+                fontSize: 13,
+                fontWeight: 600,
+                offset: 0
               }}
             />
-            <Tooltip content={<MonthlyTooltip />} />
-            <Legend 
-              wrapperStyle={{ paddingTop: '10px' }}
+            
+            <ReferenceLine 
+              y={0} 
+              stroke="#6B7280" 
+              strokeWidth={2}
+              strokeDasharray="0"
             />
+            
+            <Tooltip content={<MonthlyTooltip />} cursor={{ fill: 'rgba(59, 130, 246, 0.05)' }} />
+            
             <Bar 
-              dataKey="pnl" 
-              name="Monthly P&L"
-              radius={[4, 4, 0, 0]}
+              dataKey="pnl"
+              radius={[8, 8, 8, 8]}
+              maxBarSize={60}
+              label={renderCustomLabel}
             >
               {monthlyReturns.map((entry, index) => (
-                <Bar 
-                  key={`bar-${index}`}
-                  dataKey="pnl"
-                  fill={getBarColor(entry)}
+                <Cell 
+                  key={`cell-${index}`}
+                  fill={entry.pnl >= 0 ? 'url(#colorProfit)' : 'url(#colorLoss)'}
                 />
               ))}
             </Bar>

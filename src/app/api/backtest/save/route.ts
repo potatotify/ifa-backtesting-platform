@@ -4,27 +4,26 @@ import { connectToDatabase } from '@/lib/mongodb'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { fileUrl, publicId, filename, size } = body
+    const { parameters, results, fileUrl } = body
 
-    // Save to database
+    console.log('📥 Saving backtest to MongoDB')
+
     const { db } = await connectToDatabase()
-    const result = await db.collection('uploads').insertOne({
+    const result = await db.collection('backtests').insertOne({
+      parameters,
+      results,
       fileUrl,
-      publicId,
-      filename,
-      size,
-      uploadedAt: new Date(),
+      createdAt: new Date(),
     })
+
+    console.log('✅ Backtest saved to MongoDB')
 
     return NextResponse.json({
       success: true,
-      fileId: result.insertedId,
-      fileUrl,
-      publicId,
-      filename,
+      id: result.insertedId.toString(),
     })
   } catch (error: any) {
-    console.error('Error saving upload:', error)
+    console.error('❌ Backtest save error:', error.message)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

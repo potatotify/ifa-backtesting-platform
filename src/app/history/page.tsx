@@ -31,20 +31,18 @@ export default function HistoryPage() {
     return new Date(d).toLocaleString();
   }
 
-  // Professional loading state
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto p-6">
-        <h2 className="font-semibold text-white text-3xl mb-4">Backtest History</h2>
+        <h2 className="font-semibold text-gray-900 dark:text-white text-3xl mb-4">Backtest History</h2>
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-          <p className="text-gray-400 text-lg">Loading backtests...</p>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">Loading backtests...</p>
         </div>
       </div>
     );
   }
 
-  // Pagination logic
   const totalPages = Math.ceil(backtests.length / backtestsPerPage);
   const startIndex = (currentPage - 1) * backtestsPerPage;
   const paginatedBacktests = backtests.slice(
@@ -54,14 +52,14 @@ export default function HistoryPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-6">
-      <h2 className="font-semibold text-white text-3xl mb-4">Backtest History</h2>
+      <h2 className="font-semibold text-gray-900 dark:text-white text-3xl mb-4">Backtest History</h2>
 
       {backtests.length === 0 ? (
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
           <div className="text-6xl">📊</div>
           <div className="text-center space-y-2">
-            <p className="text-gray-300 text-lg font-semibold">No past backtests found</p>
-            <p className="text-gray-400">Run a backtest to see it listed here!</p>
+            <p className="text-gray-900 dark:text-gray-300 text-lg font-semibold">No past backtests found</p>
+            <p className="text-gray-600 dark:text-gray-400">Run a backtest to see it listed here!</p>
           </div>
           <button
             onClick={() => router.push("/")}
@@ -76,10 +74,10 @@ export default function HistoryPage() {
             {paginatedBacktests.map((bt) => (
               <li
                 key={bt.id}
-                className="bg-gray-800 p-4 rounded cursor-pointer hover:bg-gray-700 transition-colors border border-gray-700"
+                className="bg-white dark:bg-gray-800 p-4 rounded cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700 shadow-sm"
                 onClick={() => router.push(`/history/${bt.id}`)}
               >
-                <div className="flex justify-between text-gray-300 mb-2">
+                <div className="flex justify-between text-gray-700 dark:text-gray-300 mb-2">
                   <span>
                     <strong>Date:</strong> {formatDate(bt.date)}
                   </span>
@@ -87,10 +85,10 @@ export default function HistoryPage() {
                     <strong>Total Trades:</strong> {bt.totalTrades}
                   </span>
                 </div>
-                <div className="text-gray-200 space-y-1">
+                <div className="text-gray-800 dark:text-gray-200 space-y-1">
                   <p>
                     <strong>Win Rate:</strong>{" "}
-                    <span className="text-green-400">
+                    <span className="text-green-600 dark:text-green-400">
                       {bt.winRate ? (bt.winRate * 100).toFixed(2) : "0.00"}%
                     </span>
                   </p>
@@ -98,7 +96,7 @@ export default function HistoryPage() {
                     <strong>Total P&L:</strong>{" "}
                     <span
                       className={
-                        bt.totalPnl >= 0 ? "text-green-400" : "text-red-400"
+                        bt.totalPnl >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
                       }
                     >
                       ${bt.totalPnl?.toFixed(2) ?? "0.00"}
@@ -114,10 +112,9 @@ export default function HistoryPage() {
             ))}
           </ul>
 
-          {/* Pagination Controls */}
           {totalPages > 1 && (
             <div className="flex justify-between items-center mt-6">
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Showing {startIndex + 1}-
                 {Math.min(startIndex + backtestsPerPage, backtests.length)} of{" "}
                 {backtests.length}
@@ -126,11 +123,11 @@ export default function HistoryPage() {
                 <button
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 bg-gray-700 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 transition-colors"
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                 >
                   Previous
                 </button>
-                <span className="px-4 py-2 text-white">
+                <span className="px-4 py-2 text-gray-900 dark:text-white">
                   Page {currentPage} of {totalPages}
                 </span>
                 <button
@@ -138,7 +135,7 @@ export default function HistoryPage() {
                     setCurrentPage((p) => Math.min(totalPages, p + 1))
                   }
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 bg-gray-700 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-600 transition-colors"
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                 >
                   Next
                 </button>
