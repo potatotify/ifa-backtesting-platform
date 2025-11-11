@@ -40,29 +40,19 @@ export default function CompareBacktests({ currentBacktest, onClose }: CompareBa
   }
 
   const MetricCard = ({ label, current, compare }: any) => {
-    const currentVal = parseFloat(current) || 0
-    const compareVal = parseFloat(compare) || 0
-    const diff = currentVal - compareVal
-    const isPositive = diff > 0
-
     return (
       <div className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4">
-        <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">{label}</p>
+        <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">{label}</p>
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <p className="text-xs text-gray-500">Current</p>
+            <p className="text-xs text-gray-500 mb-1">Current</p>
             <p className="text-lg font-bold text-gray-900 dark:text-white">{current}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500">Compare</p>
+            <p className="text-xs text-gray-500 mb-1">Compare</p>
             <p className="text-lg font-bold text-gray-900 dark:text-white">{compare}</p>
           </div>
         </div>
-        {selectedBacktest && (
-          <div className={`mt-2 text-sm ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-            {isPositive ? '↑' : '↓'} {Math.abs(diff).toFixed(2)} difference
-          </div>
-        )}
       </div>
     )
   }
